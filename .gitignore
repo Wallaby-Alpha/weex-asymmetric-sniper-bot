@@ -1,0 +1,15 @@
+# Config & Secrets
+config.json
+.env
+*.key
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.pytest_cache/
+
+# Runtime state & logs
+sniper_state.json
+weex_sniper.log
+*.log

@@ -1,0 +1,16 @@
+[Unit]
+Description=WEEX 4-Hour Asymmetric Sniper Bot Daemon
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/weex-asymmetric-sniper-bot
+ExecStart=/root/weex-asymmetric-sniper-bot/venv/bin/python3 /root/weex-asymmetric-sniper-bot/bot.py
+Restart=always
+RestartSec=10
+StandardOutput=append:/root/weex-asymmetric-sniper-bot/weex_sniper.log
+StandardError=append:/root/weex-asymmetric-sniper-bot/weex_sniper.log
+
+[Install]
+WantedBy=multi-user.target
