@@ -216,12 +216,18 @@ class WeexClient:
             tickers = r.json()
             if not isinstance(tickers, list):
                 return []
+            NON_CRYPTO_BASE_SYMBOLS = {
+                "BZ", "CL", "NG", "HG", "XAU", "XAUT", "XAG",
+                "US30", "SPX", "NDX", "NAS100", "DJI", "DAX", "FTSE", "DXY", "NIKKEI", "HK50",
+                "GOLD", "OIL", "TSLA", "NVDA", "AAPL", "MSFT", "AMZN", "GOOG", "GOOGL",
+                "META", "COIN", "MSTR", "ORCL", "SAMSUNG", "SAMSUNGEM", "PANASONIC", "BKNG", "DKNG", "CCL", "CRCL"
+            }
             usdt_tickers = []
-            bad_tokens = ["STOCK", "OIL", "XAUT", "GOLD", "ETF", "NVDA", "AAPL", "TSLA", "MSFT", "AMZN"]
             for t in tickers:
                 sym = t.get("symbol", "")
                 if sym.endswith("USDT") or sym.endswith("_USDT"):
-                    if any(b in sym for b in bad_tokens):
+                    base_sym = sym.replace("USDT", "").replace("_USDT", "").upper()
+                    if base_sym in NON_CRYPTO_BASE_SYMBOLS or any(b in sym.upper() for b in ["STOCK", "ETF"]):
                         continue
                     vol = float(t.get("quoteVolume", 0.0) or t.get("volume", 0.0) or 0.0)
                     usdt_tickers.append((sym, vol))
@@ -476,12 +482,17 @@ class AsymmetricSniperEngine:
             delta = abs(origin_price - extreme_price)
             impulse_strength = delta / cur_atr
 
+            target_mode = self.cfg.get("target_mode", "EXT_1.272")
+
             # Style A Fibonacci Calculation
             if side == "LONG":
                 p50 = extreme_price - 0.50 * delta
                 p70 = extreme_price - 0.705 * delta
                 sl_price = extreme_price - 0.786 * delta
-                tp_price = extreme_price + 0.272 * delta
+                if target_mode == "STRUCTURE_RESISTANCE":
+                    tp_price = extreme_price
+                else:
+                    tp_price = extreme_price + 0.272 * delta
                 inval_beyond = extreme_price * 1.002
 
                 # Subsequent price activity check between impulse completion and now
@@ -518,7 +529,10 @@ class AsymmetricSniperEngine:
                 p50 = extreme_price + 0.50 * delta
                 p70 = extreme_price + 0.705 * delta
                 sl_price = extreme_price + 0.786 * delta
-                tp_price = extreme_price - 0.272 * delta
+                if target_mode == "STRUCTURE_RESISTANCE":
+                    tp_price = extreme_price
+                else:
+                    tp_price = extreme_price - 0.272 * delta
                 inval_beyond = extreme_price * 0.998
 
                 subsequent_lows = lows[i + 1:] if i + 1 < n else []
